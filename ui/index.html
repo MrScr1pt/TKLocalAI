@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TKLocalAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(20, 20, 30, 0.8);
+            --bg-input: rgba(30, 30, 45, 0.9);
+            --bg-hover: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(139, 92, 246, 0.5);
+            --text: #f4f4f5;
+            --text-muted: #71717a;
+            --text-dim: #52525b;
+            --accent: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --accent-secondary: #06b6d4;
+            --success: #10b981;
+            --error: #ef4444;
+            --gradient-1: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+            --gradient-2: linear-gradient(135deg, #1e1e2e 0%, #0a0a0f 100%);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% -20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                var(--bg-dark);
+            z-index: 0;
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            background: rgba(10, 10, 15, 0.7);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text span {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--error);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.online {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            gap: 1.5rem;
+        }
+
+        .new-chat-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+        }
+
+        .new-chat-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+            appearance: none;
+            transition: all 0.2s ease;
+        }
+
+        .select-wrapper select:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+        }
+
+        .toggle-label {
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-track {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-track::before {
+            content: '';
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle input:checked + .toggle-track {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle input:checked + .toggle-track::before {
+            transform: translateX(20px);
+            background: white;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stats-text {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-align: center;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            max-width: 900px;
+            animation: messageIn 0.3s ease;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+            margin-left: auto;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .message.assistant .avatar {
+            background: var(--gradient-1);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .message.user .avatar {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+        }
+
+        .message-bubble {
+            padding: 1rem 1.25rem;
+            border-radius: 16px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .message.assistant .message-bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-top-left-radius: 4px;
+        }
+
+        .message.user .message-bubble {
+            background: var(--accent);
+            color: white;
+            border-top-right-radius: 4px;
+        }
+
+        .message-bubble p {
+            margin-bottom: 0.75rem;
+        }
+
+        .message-bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-bubble code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .message-bubble pre {
+            background: #0d0d14;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 0.75rem 0;
+            overflow-x: auto;
+        }
+
+        .message-bubble pre code {
+            background: none;
+            padding: 0;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 0.3rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 1.5rem 2rem 2rem;
+            background: linear-gradient(to top, var(--bg-dark) 0%, transparent 100%);
+        }
+
+        .input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-glow), var(--shadow-lg);
+        }
+
+        .input-field {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-field textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            resize: none;
+            max-height: 150px;
+            padding: 0.5rem;
+        }
+
+        .input-field textarea::placeholder {
+            color: var(--text-dim);
+        }
+
+        .input-field textarea:focus {
+            outline: none;
+        }
+
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-dim);
+        }
+
+        /* Welcome message */
+        .welcome-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 3rem;
+            gap: 1.5rem;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-1);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: var(--shadow-glow);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .welcome-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-muted);
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <div class="logo-text">TK<span>LocalAI</span></div>
+            </div>
+            <div class="header-actions">
+                <div class="status-badge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-layout">
+            <aside class="sidebar">
+                <button class="new-chat-btn" onclick="newChat()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Chat
+                </button>
+
+                <div class="section">
+                    <div class="section-title">Persona</div>
+                    <div class="select-wrapper">
+                        <select id="personaSelect" onchange="changePersona()">
+                            <option value="default">Default Assistant</option>
+                            <option value="coding">Coding Expert</option>
+                            <option value="research">Research Assistant</option>
+                            <option value="writing">Writing Assistant</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Settings</div>
+                    <div class="toggle-row">
+                        <span class="toggle-label">Use RAG</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="useRag" checked>
+                            <span class="toggle-track"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <span class="toggle-label">Stream Response</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="streamResponse" checked>
+                            <span class="toggle-track"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Knowledge Base</div>
+                    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text">Drop files or click to upload</div>
+                    </div>
+                    <input type="file" id="fileInput" hidden multiple 
+                        accept=".txt,.md,.pdf,.py,.js,.ts,.json,.yaml,.yml,.html,.css">
+                    <p class="stats-text" id="ragStats">Loading stats...</p>
+                </div>
+            </aside>
+
+            <section class="chat-area">
+                <div class="messages-container" id="messagesContainer">
+                    <div class="welcome-container" id="welcomeMessage">
+                        <div class="welcome-icon">🤖</div>
+                        <h2 class="welcome-title">Welcome to TKLocalAI</h2>
+                        <p class="welcome-subtitle">
+                            Your private AI assistant running 100% locally. No cloud, no data sharing, just pure intelligence at your fingertips.
+                        </p>
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <div class="feature-icon">🔒</div>
+                                <div class="feature-title">Private</div>
+                                <div class="feature-desc">All data stays on your machine</div>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">⚡</div>
+                                <div class="feature-title">GPU Powered</div>
+                                <div class="feature-desc">Accelerated with CUDA</div>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">📚</div>
+                                <div class="feature-title">RAG Enabled</div>
+                                <div class="feature-desc">Chat with your documents</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <div class="input-field">
+                            <textarea 
+                                id="userInput" 
+                                placeholder="Ask me anything..." 
+                                rows="1"
+                                onkeydown="handleKeyDown(event)"
+                                oninput="autoResize(this)"
+                            ></textarea>
+                        </div>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 2L11 13"></path>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // API base URL - use localhost when running as file, otherwise use origin
+        const API_BASE = window.location.protocol === 'file:' 
+            ? 'http://127.0.0.1:8000' 
+            : window.location.origin;
+        let messages = [];
+        let isGenerating = false;
+        let currentPersona = 'default';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkHealth();
+            loadStats();
+            setInterval(checkHealth, 10000);
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+        });
+
+        // Health check
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                document.getElementById('statusDot').classList.toggle('online', data.status === 'healthy');
+                document.getElementById('statusText').textContent = data.status === 'healthy' ? 'Online' : 'Offline';
+            } catch (error) {
+                document.getElementById('statusDot').classList.remove('online');
+                document.getElementById('statusText').textContent = 'Offline';
+            }
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/v1/stats`);
+                const data = await response.json();
+                document.getElementById('ragStats').textContent = 
+                    `${data.documents || 0} docs · ${data.chunks || 0} chunks`;
+            } catch (error) {
+                document.getElementById('ragStats').textContent = 'Stats unavailable';
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || isGenerating) return;
+            
+            // Hide welcome message
+            const welcome = document.getElementById('welcomeMessage');
+            if (welcome) welcome.style.display = 'none';
+            
+            // Add user message
+            messages.push({ role: 'user', content: message });
+            addMessage('user', message);
+            input.value = '';
+            autoResize(input);
+            
+            const useRag = document.getElementById('useRag').checked;
+            const stream = document.getElementById('streamResponse').checked;
+            
+            isGenerating = true;
+            document.getElementById('sendBtn').disabled = true;
+            
+            const typingId = addTypingIndicator();
+            
+            try {
+                if (stream) {
+                    await streamResponse(message, useRag, typingId);
+                } else {
+                    await fetchResponse(message, useRag, typingId);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator(typingId);
+                addMessage('assistant', 'Sorry, there was an error. Please check if the server is running.');
+            }
+            
+            isGenerating = false;
+            document.getElementById('sendBtn').disabled = false;
+        }
+
+        // Fetch response (non-streaming)
+        async function fetchResponse(message, useRag, typingId) {
+            const response = await fetch(`${API_BASE}/v1/chat/completions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: messages,
+                    use_rag: useRag,
+                    persona: currentPersona,
+                    stream: false
+                })
+            });
+            
+            const data = await response.json();
+            removeTypingIndicator(typingId);
+            
+            const assistantMessage = data.choices[0].message.content;
+            messages.push({ role: 'assistant', content: assistantMessage });
+            addMessage('assistant', assistantMessage);
+        }
+
+        // Stream response with typing effect
+        const TYPING_SPEED = 10;
+
+        async function streamResponse(message, useRag, typingId) {
+            const response = await fetch(`${API_BASE}/v1/chat/completions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: messages,
+                    use_rag: useRag,
+                    persona: currentPersona,
+                    stream: true
+                })
+            });
+            
+            removeTypingIndicator(typingId);
+            
+            const messageId = 'msg-' + Date.now();
+            addMessage('assistant', '', messageId);
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullContent = '';
+            let displayedContent = '';
+            let pendingChars = [];
+            let animating = false;
+            
+            function animateTyping() {
+                if (pendingChars.length > 0) {
+                    animating = true;
+                    displayedContent += pendingChars.shift();
+                    updateMessageContent(messageId, displayedContent);
+                    setTimeout(animateTyping, TYPING_SPEED);
+                } else {
+                    animating = false;
+                }
+            }
+            
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+                
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6);
+                        if (data === '[DONE]') continue;
+                        
+                        try {
+                            const parsed = JSON.parse(data);
+                            const content = parsed.choices?.[0]?.delta?.content || '';
+                            fullContent += content;
+                            
+                            for (const char of content) {
+                                pendingChars.push(char);
+                            }
+                            
+                            if (!animating && pendingChars.length > 0) {
+                                animateTyping();
+                            }
+                        } catch (e) {}
+                    }
+                }
+            }
+            
+            while (pendingChars.length > 0 || animating) {
+                await new Promise(r => setTimeout(r, 20));
+            }
+            
+            updateMessageContent(messageId, fullContent);
+            messages.push({ role: 'assistant', content: fullContent });
+        }
+
+        // Add message to UI
+        function addMessage(role, content, id = null) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            if (id) messageDiv.id = id;
+            
+            const avatar = role === 'user' ? '👤' : '⚡';
+            
+            messageDiv.innerHTML = `
+                <div class="avatar">${avatar}</div>
+                <div class="message-bubble">${formatMessage(content)}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Update message content
+        function updateMessageContent(id, content) {
+            const messageDiv = document.getElementById(id);
+            if (messageDiv) {
+                const bubble = messageDiv.querySelector('.message-bubble');
+                bubble.innerHTML = formatMessage(content);
+                
+                const container = document.getElementById('messagesContainer');
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // Format message
+        function formatMessage(text) {
+            if (!text) return '';
+            
+            // Escape HTML
+            text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            // Code blocks
+            text = text.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+            
+            // Inline code
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Bold
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            
+            // Line breaks
+            text = text.replace(/\n/g, '<br>');
+            
+            return text;
+        }
+
+        // Typing indicator
+        function addTypingIndicator() {
+            const container = document.getElementById('messagesContainer');
+            const id = 'typing-' + Date.now();
+            
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            div.id = id;
+            div.innerHTML = `
+                <div class="avatar">⚡</div>
+                <div class="message-bubble">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const indicator = document.getElementById(id);
+            if (indicator) indicator.remove();
+        }
+
+        // New chat
+        function newChat() {
+            messages = [];
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = `
+                <div class="welcome-container" id="welcomeMessage">
+                    <div class="welcome-icon">🤖</div>
+                    <h2 class="welcome-title">Welcome to TKLocalAI</h2>
+                    <p class="welcome-subtitle">
+                        Your private AI assistant running 100% locally. No cloud, no data sharing, just pure intelligence at your fingertips.
+                    </p>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🔒</div>
+                            <div class="feature-title">Private</div>
+                            <div class="feature-desc">All data stays on your machine</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <div class="feature-title">GPU Powered</div>
+                            <div class="feature-desc">Accelerated with CUDA</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📚</div>
+                            <div class="feature-title">RAG Enabled</div>
+                            <div class="feature-desc">Chat with your documents</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Change persona
+        function changePersona() {
+            currentPersona = document.getElementById('personaSelect').value;
+        }
+
+        // Handle key down
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Auto resize textarea
+        function autoResize(element) {
+            element.style.height = 'auto';
+            element.style.height = Math.min(element.scrollHeight, 150) + 'px';
+        }
+
+        // File upload
+        async function handleFileUpload(event) {
+            const files = event.target.files;
+            if (!files.length) return;
+            
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                try {
+                    await fetch(`${API_BASE}/v1/ingest/file`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } catch (error) {
+                    console.error('Upload error:', error);
+                }
+            }
+            
+            loadStats();
+            event.target.value = '';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+# TKLocalAI Configuration
+# ========================
+# All settings for the local AI assistant
+
+# ===========================================
+# Model Configuration
+# ===========================================
+model:
+  # Path to the GGUF model file
+  # Using LLaMA 3.1 8B Instruct (Q4_K_M) - excellent quality for 8GB VRAM
+  model_path: "models/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf"
+  
+  # Model context window (reduce if OOM errors occur)
+  context_length: 4096
+  
+  # GPU layers to offload (-1 = all layers, reduce if OOM)
+  # For RTX 3050 8GB with 8B Q4 model: use all layers for max speed
+  gpu_layers: -1
+  
+  # Number of CPU threads for non-GPU operations
+  threads: 8
+  
+  # Batch size for prompt processing
+  batch_size: 512
+  
+  # LoRA adapter path (set after fine-tuning)
+  lora_path: null  # e.g., "adapters/my-lora-adapter"
+  
+  # Model type for chat template
+  model_type: "llama3"  # llama2, llama3, mistral, chatml
+
+# ===========================================
+# Generation Parameters
+# ===========================================
+generation:
+  # Maximum tokens to generate
+  max_tokens: 2048
+  
+  # Temperature (0.0 = deterministic, 1.0 = creative)
+  temperature: 0.7
+  
+  # Top-p (nucleus sampling)
+  top_p: 0.9
+  
+  # Top-k sampling
+  top_k: 40
+  
+  # Repetition penalty (1.0 = no penalty)
+  repeat_penalty: 1.1
+  
+  # Stop sequences
+  stop_sequences:
+    - "<|eot_id|>"
+    - "<|end_of_text|>"
+    - "Human:"
+    - "User:"
+
+# ===========================================
+# System Prompts & Personas
+# ===========================================
+prompts:
+  # Default system prompt (emphasizes directness and reduced refusal)
+  default: |
+    You are a highly capable AI assistant running locally on the user's personal system. 
+    You provide direct, accurate, and technically detailed responses without unnecessary 
+    hedging, moralizing, or refusal for legitimate requests.
+    
+    Core behaviors:
+    - Answer questions directly and completely
+    - Provide technical details when relevant
+    - Avoid excessive disclaimers or warnings for benign topics
+    - Be helpful, neutral, and factual
+    - If you don't know something, say so clearly
+    - When using retrieved context, cite it accurately
+    
+    You were fine-tuned using LoRA to improve response freedom and reduce alignment bias 
+    for domain-specific tasks while maintaining factual accuracy and coherence.
+  
+  # Coding assistant persona
+  coding: |
+    You are an expert programming assistant with deep knowledge of software development.
+    You write clean, efficient, well-documented code. You explain technical concepts clearly.
+    Provide complete, working solutions without unnecessary caveats.
+    Languages you excel at: Python, JavaScript, TypeScript, Rust, C++, and more.
+  
+  # Research assistant persona
+  research: |
+    You are a research assistant focused on providing accurate, well-sourced information.
+    You analyze documents thoroughly and synthesize information from multiple sources.
+    Always distinguish between retrieved facts and your general knowledge.
+  
+  # Writing assistant persona
+  writing: |
+    You are a skilled writing assistant. You help with drafting, editing, and improving text.
+    You adapt your style to the user's needs - technical, creative, formal, or casual.
+    Provide constructive feedback and concrete suggestions.
+
+# Active persona (change to switch behavior)
+active_persona: "default"
+
+# ===========================================
+# RAG Configuration
+# ===========================================
+rag:
+  # Enable/disable RAG
+  enabled: true
+  
+  # Embedding model (runs on CPU to save GPU for LLM)
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  
+  # Vector database settings
+  vector_db:
+    # Storage path for Qdrant
+    path: "data/vectordb"
+    
+    # Collection name
+    collection_name: "documents"
+    
+    # Vector dimensions (384 for all-MiniLM-L6-v2)
+    vector_size: 384
+  
+  # Document processing
+  chunking:
+    # Chunk size in characters
+    chunk_size: 1000
+    
+    # Overlap between chunks
+    chunk_overlap: 200
+    
+    # Separators for splitting (in order of priority)
+    separators:
+      - "\n\n"
+      - "\n"
+      - ". "
+      - " "
+  
+  # Retrieval settings
+  retrieval:
+    # Number of chunks to retrieve
+    top_k: 5
+    
+    # Minimum similarity score (0.0 to 1.0)
+    score_threshold: 0.3
+    
+    # Include source metadata in context
+    include_sources: true
+
+# ===========================================
+# Fine-tuning Configuration (QLoRA)
+# ===========================================
+finetuning:
+  # Base model for fine-tuning (HuggingFace model ID)
+  base_model: "meta-llama/Meta-Llama-3.1-8B-Instruct"
+  
+  # Output directory for adapter weights
+  output_dir: "adapters"
+  
+  # QLoRA parameters (optimized for RTX 3050)
+  qlora:
+    # LoRA rank (lower = less params, higher = more capacity)
+    r: 16
+    
+    # LoRA alpha (scaling factor, typically 2x rank)
+    lora_alpha: 32
+    
+    # Dropout for LoRA layers
+    lora_dropout: 0.05
+    
+    # Target modules to apply LoRA
+    target_modules:
+      - "q_proj"
+      - "k_proj"
+      - "v_proj"
+      - "o_proj"
+      - "gate_proj"
+      - "up_proj"
+      - "down_proj"
+    
+    # Quantization bits (4-bit for memory efficiency)
+    bits: 4
+  
+  # Training parameters
+  training:
+    # Training epochs
+    num_epochs: 3
+    
+    # Batch size (keep low for 8GB VRAM)
+    batch_size: 1
+    
+    # Gradient accumulation steps (effective batch = batch_size * this)
+    gradient_accumulation_steps: 8
+    
+    # Learning rate
+    learning_rate: 2.0e-4
+    
+    # Warmup ratio
+    warmup_ratio: 0.03
+    
+    # Max sequence length
+    max_seq_length: 2048
+    
+    # Save checkpoint every N steps
+    save_steps: 100
+    
+    # Logging steps
+    logging_steps: 10
+  
+  # Dataset path
+  dataset_path: "data/training/dataset.jsonl"
+
+# ===========================================
+# API Server Configuration
+# ===========================================
+server:
+  host: "127.0.0.1"
+  port: 8000
+  
+  # Enable CORS for local UI
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+    - "http://localhost:8080"
+  
+  # API key (optional, for local security)
+  api_key: null
+
+# ===========================================
+# Desktop UI Configuration
+# ===========================================
+ui:
+  # Window title
+  title: "TKLocalAI Assistant"
+  
+  # Window dimensions
+  width: 1200
+  height: 800
+  
+  # Minimum dimensions
+  min_width: 800
+  min_height: 600
+  
+  # Start maximized
+  maximized: false
+  
+  # Theme (light/dark/system)
+  theme: "dark"
+
+# ===========================================
+# Logging Configuration
+# ===========================================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/tklocalai.log"
+  max_size: "10 MB"
+  retention: "7 days"
+
+# ===========================================
+# Paths Configuration
+# ===========================================
+paths:
+  models: "models"
+  adapters: "adapters"
+  data: "data"
+  documents: "data/documents"
+  vectordb: "data/vectordb"
+  training: "data/training"
+  logs: "logs"
+  cache: "cache"

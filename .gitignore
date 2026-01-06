@@ -1,0 +1,63 @@
+# Ignore virtual environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Model files (too large for git)
+models/*.gguf
+models/*.bin
+models/*.safetensors
+
+# Adapter weights (optional - may want to version these)
+adapters/*/final/
+adapters/*/checkpoint-*/
+
+# Vector database
+data/vectordb/
+
+# Logs
+logs/
+*.log
+
+# Cache
+cache/
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Environment files with secrets
+.env
+.env.local
+
+# Keep directories but ignore contents
+!data/documents/.gitkeep
+!data/training/.gitkeep
+!models/.gitkeep
+!adapters/.gitkeep
