@@ -200,16 +200,22 @@ $coreDeps = @(
 
 foreach ($dep in $coreDeps) {
     Write-Host "  Installing $dep..." -ForegroundColor Gray
-    pip install $dep --quiet 2>$null
+    pip install $dep --quiet 2>&1 | Out-Null
 }
 
 # Install sentence-transformers (depends on scipy)
 Write-Host "  Installing sentence-transformers..." -ForegroundColor Gray
-pip install sentence-transformers --quiet
+pip install sentence-transformers --quiet 2>&1 | Out-Null
 
-# Install the rest from requirements.txt
+# Install the rest from requirements.txt (ignore errors for optional packages)
 Write-Host "  Installing remaining packages..." -ForegroundColor Gray
-pip install -r requirements.txt --quiet --ignore-installed llama-cpp-python torch torchvision torchaudio 2>$null
+$env:PIP_QUIET = "1"
+pip install fastapi uvicorn python-multipart pydantic pydantic-settings sse-starlette --quiet 2>&1 | Out-Null
+pip install pywebview --quiet 2>&1 | Out-Null
+pip install pypdf pymupdf python-docx markdown beautifulsoup4 --quiet 2>&1 | Out-Null
+pip install tiktoken qdrant-client --quiet 2>&1 | Out-Null
+pip install python-dotenv pyyaml rich tqdm httpx aiofiles watchdog loguru --quiet 2>&1 | Out-Null
+pip install transformers accelerate datasets --quiet 2>&1 | Out-Null
 
 Write-Host "  All dependencies installed" -ForegroundColor Green
 
