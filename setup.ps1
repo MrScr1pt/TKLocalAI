@@ -2,7 +2,7 @@
 # ===================================
 # This script sets up everything needed to run TKLocalAI
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
