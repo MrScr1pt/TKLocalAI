@@ -154,30 +154,48 @@ if (-not $torchInstalled) {
 # ===========================================
 
 Write-Host ""
-Write-Host "[5/7] Installing llama-cpp-python with CUDA..." -ForegroundColor Yellow
-Write-Host "  Trying pre-built CUDA wheels..." -ForegroundColor Gray
+Write-Host "[5/7] Installing llama-cpp-python..." -ForegroundColor Yellow
 
-$llamaInstalled = $false
-$cudaVersions = @("cu118", "cu121", "cu122", "cu123", "cu124")
-
-foreach ($cuda in $cudaVersions) {
-    if (-not $llamaInstalled) {
-        try {
+# Check if already installed
+$llamaCheck = python -c "import llama_cpp; print('ok')" 2>&1
+if ($llamaCheck -eq "ok") {
+    Write-Host "  llama-cpp-python already installed" -ForegroundColor Green
+} else {
+    # Try pre-built CUDA wheels first
+    Write-Host "  Trying pre-built CUDA wheels..." -ForegroundColor Gray
+    $cudaVersions = @("cu121", "cu118", "cu122", "cu123", "cu124")
+    $llamaInstalled = $false
+    
+    foreach ($cuda in $cudaVersions) {
+        if (-not $llamaInstalled) {
+            Write-Host "    Trying $cuda..." -ForegroundColor Gray
             $url = "https://abetlen.github.io/llama-cpp-python/whl/$cuda"
-            pip install llama-cpp-python --prefer-binary --extra-index-url $url --quiet 2>$null
-            $llamaInstalled = $true
-            Write-Host "  llama-cpp-python with $cuda installed" -ForegroundColor Green
-        } catch {
-            # Continue to next version
+            pip install llama-cpp-python --prefer-binary --extra-index-url $url 2>&1 | Out-Null
+            
+            # Verify installation
+            $check = python -c "import llama_cpp; print('ok')" 2>&1
+            if ($check -eq "ok") {
+                $llamaInstalled = $true
+                Write-Host "  llama-cpp-python with $cuda installed" -ForegroundColor Green
+            } else {
+                pip uninstall llama-cpp-python -y 2>&1 | Out-Null
+            }
         }
     }
-}
-
-# Fall back to CPU
-if (-not $llamaInstalled) {
-    Write-Host "  No CUDA wheels found, installing CPU version..." -ForegroundColor Yellow
-    pip install llama-cpp-python --quiet
-    Write-Host "  llama-cpp-python CPU version installed" -ForegroundColor Yellow
+    
+    # Fall back to CPU version from PyPI
+    if (-not $llamaInstalled) {
+        Write-Host "  CUDA wheels failed, installing CPU version..." -ForegroundColor Yellow
+        pip install llama-cpp-python 2>&1 | Out-Null
+        
+        $check = python -c "import llama_cpp; print('ok')" 2>&1
+        if ($check -eq "ok") {
+            Write-Host "  llama-cpp-python CPU version installed" -ForegroundColor Green
+        } else {
+            Write-Host "  WARNING: llama-cpp-python installation failed!" -ForegroundColor Red
+            Write-Host "  You may need to install it manually with C++ build tools" -ForegroundColor Red
+        }
+    }
 }
 
 # ===========================================
